@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Pay Integration</title>
+    <script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"></script>
+    <script>
+        let paymentsClient;
+
+        // Initialize Google Pay API when the library is loaded
+        function onGooglePayLoaded() {
+            paymentsClient = new google.payments.api.PaymentsClient({environment: 'TEST'});
+            const isReadyToPayRequest = {
+                apiVersion: 2,
+                apiVersionMinor: 0,
+                allowedPaymentMethods: [{
+                    type: 'CARD',
+                    parameters: {
+                        allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+                        allowedCardNetworks: ['VISA', 'MASTERCARD']
+                    }
+                }]
+            };
+
+            // Check if the user is ready to pay
+            paymentsClient.isReadyToPay(isReadyToPayRequest)
+                .then(response => {
+                    if (response.result) {
+                        createAndAddButton();
+                    } else {
+                        console.error('Google Pay is not available.');
+                    }
+                })
+                .catch(error => console.error('Error checking readiness:', error));
+        }
+
+        // Create and add the Google Pay button
+        function createAndAddButton() {
+            const button = paymentsClient.createButton({
+                onClick: onGooglePaymentButtonClicked
+            });
+            document.getElementById('container').appendChild(button);
+        }
+
+        // Handle button click and load payment data
+        function onGooglePaymentButtonClicked() {
+            const paymentDataRequest = {
+                apiVersion: 2,
+                apiVersionMinor: 0,
+                allowedPaymentMethods: [{
+                    type: 'CARD',
+                    parameters: {
+                        allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+                        allowedCardNetworks: ['VISA', 'MASTERCARD']
+                    },
+                    tokenizationSpecification: {
+                        type: 'PAYMENT_GATEWAY',
+                        parameters: {
+                            gateway: 'example',
+                            gatewayMerchantId: 'exampleMerchantId'
+                        }
+                    }
+                }],
+                transactionInfo: {
+                    totalPriceStatus: 'FINAL',
+                    totalPrice: '10.00',
+                    currencyCode: 'USD'
+                },
+                merchantInfo: {
+                    merchantName: 'Example Merchant'
+                }
+            };
+
+            paymentsClient.loadPaymentData(paymentDataRequest)
+                .then(paymentData => {
+                    console.log('Payment data:', paymentData);
+                    // Send payment data to your server for processing
+                })
+                .catch(error => console.error('Error loading payment data:', error));
+        }
+    </script>
+</head>
+<body>
+<h1>Google Pay Integration</h1>
+<div id="container"></div>
+</body>
+</html>
