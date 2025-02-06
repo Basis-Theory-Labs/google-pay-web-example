@@ -75,10 +75,28 @@
             try {
                 const paymentData = await paymentsClient.loadPaymentData(paymentDataRequest);
                 console.log('Payment data:', paymentData);
+
                 let encryptedPaymentToken = paymentData.paymentMethodData.tokenizationData.token;
+                await tokenizeGooglePay(encryptedPaymentToken)
             } catch (error) {
                 console.error('Error loading payment data:', error);
             }
+        }
+
+        // Tokenize Google Pay data using Basis Theory
+        async function tokenizeGooglePay(encryptedPaymentToken) {
+            const response = await fetch('https://api.basistheory.com/connections/google-pay/tokenize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'BT-API-KEY': '<PUBLIC_API_KEY>'
+                },
+                body: JSON.stringify({
+                    google_payment_method_token: encryptedPaymentToken
+                })
+            });
+
+            return await response.json();
         }
     </script>
 </head>
