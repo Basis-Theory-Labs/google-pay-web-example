@@ -78,9 +78,17 @@
 
                 let encryptedPaymentToken = JSON.parse(paymentData.paymentMethodData.tokenizationData.token);
                 console.log('Encrypted payment token:', encryptedPaymentToken);
-                var tokenIntent = await tokenizeGooglePayTokenWithBasisTheory(encryptedPaymentToken);
+                let tokenIntent = await tokenizeGooglePayTokenWithBasisTheory(encryptedPaymentToken);
 
                 console.log(JSON.stringify(tokenIntent));
+
+                let response = await chargePayment(tokenIntent.id);
+
+                if (response.status === 200) {
+                    console.log('Payment successful!');
+                } else {
+                    console.error('Payment failed.');
+                }
             } catch (error) {
                 console.error('Error loading payment data:', error);
             }
@@ -96,6 +104,23 @@
                 },
                 body: JSON.stringify({
                     google_payment_method_token: encryptedPaymentToken
+                })
+            });
+
+            let jsonResponse = await response.json();
+
+            return jsonResponse.token_intent;
+        }
+
+        // Charge Payment in backend
+        async function chargePayment(tokenIntentId) {
+            const response = await fetch('http://localhost:3000/charge-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    tokenIntentId: tokenIntentId
                 })
             });
 
