@@ -82,9 +82,9 @@
 
                 console.log(JSON.stringify(tokenIntent));
 
-                let response = await chargePayment(tokenIntent.id);
+                let { status } = await chargePayment(tokenIntent.id);
 
-                if (response.status === 200) {
+                if (status === 201) {
                     console.log('Payment successful!');
                 } else {
                     console.error('Payment failed.');

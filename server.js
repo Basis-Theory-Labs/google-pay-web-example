@@ -18,29 +18,23 @@ app.post("/charge-payment", async (request, response) => {
         headers: {
             "Content-Type": "application/json",
             "BT-API-KEY": "<PRIVATE_API_KEY>",
-            "BT-PROXY-URL": "https://checkout-test.adyen.com/v71/payments",
-            "x-API-key": "<ADYEN_X_API_KEY>"
+            "BT-PROXY-URL": "https://api.sandbox.checkout.com/payments",
+            "Authorization": "Bearer <CHECKOUT_AUTH_TOKEN>"
         },
-        body: JSON.stringify({
-            "amount": {
+        body: JSON.stringify(
+            {
+                "source": {
+                    "type": "network_token",
+                    "token_type": "googlepay",
+                    "token": `{{ token_intent: ${tokenIntentId} | json: \"$.data.number\" }}`,
+                    "expiry_month": `{{ token_intent: ${tokenIntentId} | json: \"$.data\" | card_exp: \"MM\" }}`,
+                    "expiry_year": `{{ token_intent: ${tokenIntentId} | json: \"$.data\" | card_exp: \"YYYY\" }}`,
+                },
+                "amount": 1000,
                 "currency": "USD",
-                "value": 1000
-            },
-            "reference": "Test-Payment",
-            "paymentMethod": {
-                "type": "scheme",
-                "number": `{{ token_intent: ${tokenIntentId} | json: \"$.data.number\" }}`,
-                "expiryMonth": `{{ token_intent: ${tokenIntentId} | json: \"$.data\" | card_exp: \"MM\" }}`,
-                "expiryYear": `{{ token_intent: ${tokenIntentId} | json: \"$.data\" | card_exp: \"YYYY\" }}`,
-                "brand": "googlepay"
-            },
-            "additionalData": {
-                "paymentdatasource.type": "googlepay",
-                "paymentdatasource.tokenized": "false"
-            },
-            "shopperInteraction": "Ecommerce",
-            "merchantAccount": "<ADYEN_MERCHANT_ACCOUNT>"
-        }),
+                "processing_channel_id": "<CHECKOUT_PROCESSING_CHANNEL_ID>"
+            }
+        ),
     });
 
     const chargeResponseJson = await chargeResponse.json();
@@ -48,7 +42,7 @@ app.post("/charge-payment", async (request, response) => {
     console.log(JSON.stringify(chargeResponseJson, null, 2));
 
     response.json({
-        result: chargeResponse.status,
+        status: chargeResponse.status,
     });
 });
 
